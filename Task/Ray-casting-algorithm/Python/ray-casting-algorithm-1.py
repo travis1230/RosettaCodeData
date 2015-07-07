@@ -16,8 +16,8 @@ def rayintersectseg(p, edge):
     a,b = edge
     if a.y > b.y:
         a,b = b,a
-    if p.y == a.y or p.y == b.y:
-        p = Pt(p.x, p.y + _eps)
+    #if p.y == a.y or p.y == b.y:
+        #p = Pt(p.x, p.y + _eps) this is no longer necessary with check outside loop
 
     intersect = False
 
@@ -35,16 +35,22 @@ def rayintersectseg(p, edge):
         if abs(a.x - p.x) > _tiny:
             m_blue = (p.y - a.y) / float(p.x - a.x)
         else:
-            m_blue = _huge
+            m_blue = _huge * _sign(m_red) # can't remember what bug this fixed
         intersect = m_blue >= m_red
     return intersect
 
 def _odd(x): return x%2 == 1
+def _sign(x): return 1 if x >= 0 else -1
 
 def ispointinside(p, poly):
     ln = len(poly)
+    for edge in poly.edges:  # this code fixes a bug where if p.y is equal to two edges the epsilon
+        # kicks you into the box for one edge and out for the other resulting in false positive
+        a,b = edge
+        if p.y == a.y or p.y == b.y:
+            p = Pt(p.x, p.y + _eps)
     return _odd(sum(rayintersectseg(p, edge)
-                    for edge in poly.edges ))
+                    for edge in poly.edges))
 
 def polypp(poly):
     print "\n  Polygon(name='%s', edges=(" % poly.name
